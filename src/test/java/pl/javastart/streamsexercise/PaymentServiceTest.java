@@ -2,8 +2,9 @@ package pl.javastart.streamsexercise;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -12,8 +13,9 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
+@ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
     private PaymentService paymentService;
@@ -21,10 +23,7 @@ class PaymentServiceTest {
 
     @BeforeEach
     void init() {
-        MockitoAnnotations.openMocks(this);
         paymentService = new PaymentService(new FakePaymentRepository(), dateTimeProvider);
-        when(dateTimeProvider.zonedDateTimeNow()).thenReturn(ZonedDateTime.of(2019, 4, 12, 10, 0, 0, 0, ZoneId.systemDefault()));
-        when(dateTimeProvider.yearMonthNow()).thenReturn(YearMonth.of(2019, 4));
     }
 
     @Test
@@ -38,8 +37,48 @@ class PaymentServiceTest {
     }
 
     @Test
+    void shouldReturnPaymentsSortedByDateAsc() {
+        List<Payment> payments = paymentService.findPaymentsSortedByDateAsc();
+
+        // then
+        assertThat(payments.size()).isEqualTo(6);
+        assertThat(payments.get(0).getPaymentDate()).isEqualTo(ZonedDateTime.of(2010, 10, 10, 10, 0, 0, 0, ZoneId.systemDefault()));
+        assertThat(payments.get(5).getPaymentDate()).isEqualTo(ZonedDateTime.of(2019, 4, 10, 10, 0, 0, 0, ZoneId.systemDefault()));
+    }
+
+    @Test
+    void shouldReturnPaymentsSortedByItemCountAsc() {
+        List<Payment> payments = paymentService.findPaymentsSortedByItemCountAsc();
+
+        // then
+        assertThat(payments.size()).isEqualTo(6);
+        assertThat(payments.get(0).getPaymentItems().size()).isEqualTo(1);
+        assertThat(payments.get(1).getPaymentItems().size()).isEqualTo(1);
+        assertThat(payments.get(2).getPaymentItems().size()).isEqualTo(1);
+        assertThat(payments.get(3).getPaymentItems().size()).isEqualTo(2);
+        assertThat(payments.get(4).getPaymentItems().size()).isEqualTo(2);
+        assertThat(payments.get(5).getPaymentItems().size()).isEqualTo(3);
+    }
+
+    @Test
+    void shouldReturnPaymentsSortedByItemCountDesc() {
+        List<Payment> payments = paymentService.findPaymentsSortedByItemCountDesc();
+
+        // then
+        assertThat(payments.size()).isEqualTo(6);
+        assertThat(payments.get(0).getPaymentItems().size()).isEqualTo(3);
+        assertThat(payments.get(1).getPaymentItems().size()).isEqualTo(2);
+        assertThat(payments.get(2).getPaymentItems().size()).isEqualTo(2);
+        assertThat(payments.get(3).getPaymentItems().size()).isEqualTo(1);
+        assertThat(payments.get(4).getPaymentItems().size()).isEqualTo(1);
+        assertThat(payments.get(5).getPaymentItems().size()).isEqualTo(1);
+    }
+
+
+    @Test
     void shouldReturnPaymentForCurrentMonth() {
-        // paymenty z aktualnego miesiąca
+        // given
+        mockCurrentDate();
 
         // when
         List<Payment> paymentsForCurrentMonth = paymentService.findPaymentsForCurrentMonth();
@@ -50,7 +89,6 @@ class PaymentServiceTest {
 
     @Test
     void shouldReturnPaymentForPreviousMonth() {
-        // paymenty z poprzedniego miesiąca
         // when
         List<Payment> paymentsForPrevious = paymentService.findPaymentsForGivenMonth(YearMonth.of(2019, 3));
 
@@ -60,7 +98,9 @@ class PaymentServiceTest {
 
     @Test
     void shouldReturnPaymentForLast30Days() {
-        // paymenty z ostatnich 30 dni
+        // given
+        mockCurrentDate();
+
         // when
         List<Payment> payments = paymentService.findPaymentsForGivenLastDays(30);
 
@@ -70,7 +110,9 @@ class PaymentServiceTest {
 
     @Test
     void shouldReturnPaymentForLast15Days() {
-        // paymenty z ostatnich 15 dni
+        // given
+        mockCurrentDate();
+
         // when
         List<Payment> payments = paymentService.findPaymentsForGivenLastDays(15);
 
@@ -78,11 +120,17 @@ class PaymentServiceTest {
         assertThat(payments.size()).isEqualTo(2);
     }
 
+    private void mockCurrentDate() {
+        lenient().when(dateTimeProvider.zonedDateTimeNow()).thenReturn(ZonedDateTime.of(2019, 4, 12, 10, 0, 0, 0, ZoneId.systemDefault()));
+        lenient().when(dateTimeProvider.yearMonthNow()).thenReturn(YearMonth.of(2019, 4));
+    }
+
     @Test
     void shouldFindPaymentsWithOnePaymentItem() {
-        // paymenty które mają tylko 1 payment item
+        // when
         Set<Payment> payments = paymentService.findPaymentsWithOnePaymentItem();
 
+        // then
         assertThat(payments.size()).isEqualTo(3);
         for (Payment payment : payments) {
             assertThat(payment.getPaymentItems().size()).isEqualTo(1);
@@ -92,8 +140,12 @@ class PaymentServiceTest {
 
     @Test
     void shouldFindProductsSoldInCurrentMonth() {
-        // nazwy sprzedanych produktów w tym miesiącu
+        // given
+        mockCurrentDate();
+
+        // when
         Set<String> products = paymentService.findProductsSoldInCurrentMonth();
+
 
         // then
         assertThat(products.size()).isEqualTo(3);

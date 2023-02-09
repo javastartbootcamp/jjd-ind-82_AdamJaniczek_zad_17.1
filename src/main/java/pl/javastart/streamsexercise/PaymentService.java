@@ -7,12 +7,19 @@ import java.util.Set;
 
 class PaymentService {
 
-    private PaymentRepository paymentRepository;
-    private DateTimeProvider dateTimeProvider;
+    private final PaymentRepository paymentRepository;
+    private final DateTimeProvider dateTimeProvider;
 
     PaymentService(PaymentRepository paymentRepository, DateTimeProvider dateTimeProvider) {
         this.paymentRepository = paymentRepository;
         this.dateTimeProvider = dateTimeProvider;
+    }
+
+    /*
+    Znajdź i zwróć płatności posortowane po dacie rosnąco
+     */
+    List<Payment> findPaymentsSortedByDateAsc() {
+        throw new RuntimeException("Not implemented");
     }
 
     /*
@@ -23,9 +30,16 @@ class PaymentService {
     }
 
     /*
-    Znajdź i zwróć płatności dla aktualnego miesiąca
+    Znajdź i zwróć płatności posortowane po liczbie elementów rosnąco
      */
-    List<Payment> findPaymentsForCurrentMonth() {
+    List<Payment> findPaymentsSortedByItemCountAsc() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    /*
+    Znajdź i zwróć płatności posortowane po liczbie elementów malejąco
+     */
+    List<Payment> findPaymentsSortedByItemCountDesc() {
         throw new RuntimeException("Not implemented");
     }
 
@@ -37,7 +51,14 @@ class PaymentService {
     }
 
     /*
-    Znajdź i zwróć płatności dla ostatnich X dzni
+    Znajdź i zwróć płatności dla aktualnego miesiąca
+     */
+    List<Payment> findPaymentsForCurrentMonth() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    /*
+    Znajdź i zwróć płatności dla ostatnich X dni
      */
     List<Payment> findPaymentsForGivenLastDays(int days) {
         throw new RuntimeException("Not implemented");
@@ -65,7 +86,7 @@ class PaymentService {
     }
 
     /*
-    Policz i zwróć sumę przeyznanaych rabatów dla wskazanego miesiąca
+    Policz i zwróć sumę przyznanych rabatów dla wskazanego miesiąca
      */
     BigDecimal sumDiscountForGivenMonth(YearMonth yearMonth) {
         throw new RuntimeException("Not implemented");
