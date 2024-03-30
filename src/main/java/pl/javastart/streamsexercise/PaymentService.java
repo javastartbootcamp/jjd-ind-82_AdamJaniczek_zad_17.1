@@ -2,8 +2,11 @@ package pl.javastart.streamsexercise;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 class PaymentService {
 
@@ -33,7 +36,10 @@ class PaymentService {
     Znajdź i zwróć płatności posortowane po liczbie elementów rosnąco
      */
     List<Payment> findPaymentsSortedByItemCountAsc() {
-        throw new RuntimeException("Not implemented");
+        return paymentRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(p -> p.getPaymentItems().size()))
+                .collect(Collectors.toList());
     }
 
     /*
@@ -61,14 +67,24 @@ class PaymentService {
     Znajdź i zwróć płatności dla ostatnich X dni
      */
     List<Payment> findPaymentsForGivenLastDays(int days) {
-        throw new RuntimeException("Not implemented");
-    }
+        List<Payment> paymentList = paymentRepository.findAll();
+        return paymentList
+                .stream()
+                .filter(payment -> payment.getPaymentDate()
+                                            .isAfter(dateTimeProvider
+                                            .zonedDateTimeNow()
+                                            .minusDays(days)))
+                .toList();}
 
     /*
     Znajdź i zwróć płatności z jednym elementem
      */
     Set<Payment> findPaymentsWithOnePaymentItem() {
-        throw new RuntimeException("Not implemented");
+        List<Payment> paymentList = paymentRepository.findAll();
+        return paymentList
+                .stream()
+                .filter(p -> p.getPaymentItems().size() == 1)
+                .collect(Collectors.toSet());
     }
 
     /*
@@ -96,14 +112,38 @@ class PaymentService {
     Znajdź i zwróć płatności dla użytkownika z podanym mailem
      */
     List<PaymentItem> getPaymentsForUserWithEmail(String userEmail) {
-        throw new RuntimeException("Not implemented");
+        List<Payment> payments = paymentRepository.findAll();
+        return payments.stream()
+                .filter(payment -> payment.getUser().getEmail().equalsIgnoreCase(userEmail))
+                .map(Payment::getPaymentItems)
+                .flatMap(Collection::stream)
+                .toList();
+    }
+
+    /*
+    Znajdź i zwróć płatności, których wartość przekracza wskazaną granicę
+     */
+    private BigDecimal totalValue(Payment payment) {
+        BigDecimal totalValue = new BigDecimal(0);
+        //for (PaymentItem paymentItem : payment.getPaymentItems()) {
+        //    totalValue = totalValue.add(paymentItem.getFinalPrice());
+        //}
+        //return totalValue.intValue();
+        return payment.getPaymentItems()
+                .stream()
+                .map(PaymentItem::getFinalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
     }
 
     /*
     Znajdź i zwróć płatności, których wartość przekracza wskazaną granicę
      */
     Set<Payment> findPaymentsWithValueOver(int value) {
-        throw new RuntimeException("Not implemented");
+        List<Payment> payments = paymentRepository.findAll();
+        return payments.stream()
+                .filter(payment -> payment.getTotalPrice().compareTo(BigDecimal.valueOf(value)) > 0)
+                .collect(Collectors.toSet());
     }
 
 }
